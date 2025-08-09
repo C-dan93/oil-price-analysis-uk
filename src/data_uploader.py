@@ -34,7 +34,10 @@ def upload_sample_data():
         None – Prints upload status and container contents to the console.
 """
     try:
+        # Get Azure connection string from environment variables
         connection_string = os.getenv('AZURE_CONNECTION_STRING')
+        
+        # Create BlobServiceClient using the connection string
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         
         # Get container client
