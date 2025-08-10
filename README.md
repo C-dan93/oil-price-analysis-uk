@@ -1,7 +1,7 @@
 # Oil Price Analysis - UK Impact Study
 
 ## Project Overview
-Data engineering pipeline analyzing oil price impact on UK consumption, behavior, and CO2 emissions (2015-2024).
+Data engineering pipeline analyzing oil price impact on UK consumption, behavior, and CO2 emissions (2015-2022).
 
 ## Data Sources
 - Crude Oil Prices (Kaggle)
