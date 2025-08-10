@@ -1,3 +1,12 @@
+"""
+os: Used to access environment variables (like the Azure connection string)
+
+requests: Though imported, it's not used in this script (would be for future HTTP requests)
+
+BlobServiceClient: Main Azure Blob Storage client for interacting with storage
+
+load_dotenv: Loads environment variables from a .env file (for secure credential storage)
+"""
 import os
 import requests
 from azure.storage.blob import BlobServiceClient
@@ -6,8 +15,29 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def upload_sample_data():
+
+"""
+    Uploads a sample CSV file to the 'raw-data' container in Azure Blob Storage
+    and lists all files currently in that container.
+
+    This function:
+    1. Reads the Azure connection string from environment variables.
+    2. Connects to Azure Blob Storage.
+    3. Creates a small test dataset (CSV format) in memory.
+    4. Uploads the test dataset to the 'raw-data' container.
+    5. Lists all blobs (files) in the container to confirm the upload.
+
+    Parameters:
+        None – all configuration is read from environment variables.
+
+    Returns:
+        None – Prints upload status and container contents to the console.
+"""
     try:
+        # Get Azure connection string from environment variables
         connection_string = os.getenv('AZURE_CONNECTION_STRING')
+        
+        # Create BlobServiceClient using the connection string
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         
         # Get container client
