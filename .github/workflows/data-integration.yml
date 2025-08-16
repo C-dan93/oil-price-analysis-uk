@@ -1,1 +1,97 @@
+name: Data Integration Pipeline
 
+on:
+  # Run daily at 6 AM UTC
+  schedule:
+    - cron: '0 6 * * *'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: 'Force refresh all data sources'
+        required: false
+        default: 'false'
+        type: boolean
+      data_sources:
+        description: 'Select data sources to update'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - oil_prices
+        - fossil_fuel
+        - weather
+        - co2_emissions
+
+  # Run on push to main (for testing)
+  push:
+    branches: [ main ]
+    paths: 
+      - 'src/**'
+      - '.github/workflows/**'
+
+env:
+  PYTHON_VERSION: '3.9'
+
+jobs:
+  data-integration:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+
+    - name: 📦 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: 🔧 Setup Kaggle Credentials
+      run: |
+        mkdir -p ~/.kaggle
+        echo '${{ secrets.KAGGLE_JSON }}' > ~/.kaggle/kaggle.json
+        chmod 600 ~/.kaggle/kaggle.json
+
+    - name: 🌍 Setup Environment Variables
+      run: |
+        echo "AZURE_CONNECTION_STRING=${{ secrets.AZURE_CONNECTION_STRING }}" >> $GITHUB_ENV
+
+    - name: 🛢️ Fetch Oil Price Data (Kaggle)
+      if: github.event.inputs.data_sources == 'all' || github.event.inputs.data_sources == 'oil_prices' || github.event_name != 'workflow_dispatch'
+      run: |
+        echo "🛢️ Fetching oil price data from Kaggle..."
+        python src/kaggle_oil_api.py
+      continue-on-error: true
+
+    - name: ⛽ Fetch Fossil Fuel Data (World Bank)
+      if: github.event.inputs.data_sources == 'all' || github.event.inputs.data_sources == 'fossil_fuel' || github.event_name != 'workflow_dispatch'
+      run: |
+        echo "⛽ Fetching fossil fuel data from World Bank..."
+        python src/worldbank_api.py
+      continue-on-error: true
+
+    - name: 🌤️ Fetch Weather Data (Open-Meteo)
+      if: github.event.inputs.data_sources == 'all' || github.event.inputs.data_sources == 'weather' || github.event_name != 'workflow_dispatch'
+      run: |
+        echo "🌤️ Fetching weather data from Open-Meteo..."
+        python src/uk_weather_api.py
+      continue-on-error: true
+
+    - name: 🔗 Complete Data Integration
+      run: |
+        echo "🔗 Running complete data integration..."
+        python src/complete_data_integration.py
+
+    - name: 🎉 Success Notification
+      run: |
+        echo "✅ Data integration pipeline completed successfully!"
+        echo "📊 All datasets have been updated and integrated."
+        echo "☁️ Results available in Azure Blob Storage."
