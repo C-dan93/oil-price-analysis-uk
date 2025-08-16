@@ -138,3 +138,4 @@ if __name__ == "__main__":
             print("❌ Failed to process oil data")
     else:
         print("❌ Failed to download from Kaggle")
+# Test run
